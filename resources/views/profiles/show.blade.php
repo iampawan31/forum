@@ -17,7 +17,7 @@
         </div>
         <div class="row">
             <div class="col-md-8 offset-md-2">
-                @foreach($activities as $date => $activity)
+                @forelse($activities as $date => $activity)
                     <nav aria-label="breadcrumb" class="mt-3">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item active" aria-current="page">{{ $date }}</li>
@@ -28,11 +28,11 @@
                             @include("profiles.activities.{$record->type}", ['activity' => $record])
                         @endif
                     @endforeach
-                @endforeach
-
-                <div class="mt-2">
-                    {{--                    {{ $activities->links() }}--}}
-                </div>
+                @empty
+                    <div class="text-center alert alert-warning" role="alert">
+                        There is No Activity for this User.
+                    </div>
+                @endforelse
             </div>
         </div>
     </div>
