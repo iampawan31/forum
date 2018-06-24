@@ -1,0 +1,30 @@
+<template>
+    <button :class="classes" @click="subscribe">Subscribe</button>
+</template>
+
+<script>
+    export default {
+        props: ['active'],
+        computed: {
+          classes () {
+              return ['btn', this.active ? 'btn-success' : 'btn-primary'];
+          }
+        },
+        methods: {
+            subscribe() {
+
+                let requestType = this.active ? 'delete' : 'post';
+
+                axios[requestType](location.pathname + '/subscriptions');
+
+                this.active = !this.active;
+
+                flash('Subscribed');
+            }
+        }
+    }
+</script>
+
+<style scoped>
+
+</style>

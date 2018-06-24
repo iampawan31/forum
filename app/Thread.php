@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Filters\ThreadFilters;
+use App\Notifications\ThreadWasUpdated;
 use Illuminate\Database\Eloquent\Model;
 
 class Thread extends Model
@@ -11,7 +12,7 @@ class Thread extends Model
 
     protected $guarded = [];
 
-    protected $appends = ['path'];
+    protected $appends = ['path', 'isSubscribedTo'];
 
     protected $with = ['creator', 'channel'];
 
@@ -59,7 +60,22 @@ class Thread extends Model
 
     public function addReply($reply)
     {
-        return $this->replies()->create($reply);
+        $reply = $this->replies()->create($reply);
+        $this->notifySubscribers($reply);
+        return $reply;
+    }
+
+    /**
+     * Notify all thread subscribers about a new reply.
+     *
+     * @param \App\Reply $reply
+     */
+    public function notifySubscribers($reply)
+    {
+        $this->subscriptions
+            ->where('user_id', '!=', $reply->user_id)
+            ->each
+            ->notify($reply);
     }
 
     /**
@@ -79,6 +95,8 @@ class Thread extends Model
         $this->subscriptions()->create([
             'user_id' => $userId ?: auth()->id(),
         ]);
+
+        return $this;
     }
 
     public function unsubscribe($userId = null)
@@ -86,10 +104,19 @@ class Thread extends Model
         $this->subscriptions()
             ->where('user_id', $userId ?: auth()->id())
             ->delete();
+
+        return $this;
     }
 
     public function subscriptions()
     {
         return $this->hasMany(ThreadSubscription::class);
+    }
+
+    public function getIsSubscribedToAttribute()
+    {
+        return $this->subscriptions()
+            ->where('user_id', auth()->id())
+            ->exists();
     }
 }
